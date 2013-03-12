@@ -2,6 +2,8 @@ Masterkorp's Awesome configuration
 ==================================
 This is my awesome wm config, originaly based on Guff's config.
 
+This branch is for legacy support of 3.4
+
 ### Testing
 You can test the config with the debug.sh script on the scripts folder. Opens a
 nested X session, so it can be tested within another WM
