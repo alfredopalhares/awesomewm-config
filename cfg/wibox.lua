@@ -1,5 +1,6 @@
 local awful = require("awful")
 local wibox = require("wibox")
+local battery = require("cfg.widgets.battery")
 --require("misc.notifications")
 -- freedesktop menu
 --require("cfg.menu")
@@ -7,6 +8,9 @@ local wibox = require("wibox")
 -- widgets
 local mytextclock = awful.widget.textclock()
 local mysystray= wibox.widget.systray()
+
+-- battery
+local mybattery = battery()
 
 -- Create a wibox for each screen and add it
 mywibox = {}
@@ -97,6 +101,7 @@ for s = 1, screen.count() do
 
     -- Widgets that go on the right, such as the layoutbox
     local right_layout = wibox.layout.fixed.horizontal()
+    right_layout:add(mybattery)
     right_layout:add(mytextclock)
     right_layout:add(mysystray)
     right_layout:add(mylayoutbox[s])
