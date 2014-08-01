@@ -36,7 +36,6 @@ local function update(textbox)
     -- Battery is not present
     status = "Not connected"
     total = 0
-  else
   end
   -- Notifcation of events.
   if status ~= batticon["status"] then
