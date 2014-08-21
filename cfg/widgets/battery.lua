@@ -4,6 +4,7 @@ local naughty = require("naughty")
 local surface = require("gears.surface")
 local beautiful = require("beautiful")
 local color = require("gears.color")
+local pl = require("pl.import_into")()
 
 local __bat = {}
 local base_string = "/sys/class/power_supply/BAT0"
@@ -18,34 +19,41 @@ batticon["dying"] = 0.10
 -- The battery charge
 local total = .5
 
-local function update(textbox)
-  -- Battery status
-  local status = ""
-  local f = io.open(base_string .. "/status")
-  if f then
-    status = f:read()
-    local charge = assert(io.open(base_string .. "/energy_now"):read())
-    local capacity = assert(io.open(base_string .. "/energy_full"):read())
+
+--- check_status
+-- Checks the batterry status and its charge
+-- @return A table with the charge and the status
+local function check_status()
+  local status = pl.file.read(base_string .. "/status")
+
+  if status then
+    local charge = pl.file.read(base_string .. "/energy_now")
+    local capacity = pl.file.read(base_string .. "/energy_full")
 
     -- Calculate charge
-    total = charge / capacity
-
-    textbox:set_text(math.floor(total * 100))
-
-  elseif result == nil then
-    -- Battery is not present
+    total = math.floor((charge / capacity) * 100)
+  else
     status = "Not connected"
     total = 0
   end
+
+  return { ["charge"] = total, ["status"] = status }
+end
+
+local function update(textbox)
+
+  local status = check_status()
+
   -- Notifcation of events.
-  if status ~= batticon["status"] then
+  if status["status"] ~= batticon["status"] then
     naughty.notify({text = status, title = "Battery"})
   end
-  batticon["status"] = status
+  batticon["status"] = status["status"]
 end
 
 local function new(args)
   local args = args or {}
+  local status = check_status()
 
   -- A layout widget that contains the 3 widgets for the diferent
   __bat.widget = wibox.layout.fixed.horizontal()
@@ -68,11 +76,11 @@ local function new(args)
     -- It must not overlap, and since y is the counting from the top, you need to translate the rectangle to the bottom of the icon
     cr:translate(.5, (2 + batticon["height"] * (1 - total)))
     cr:rectangle(1, 1, batticon["width"] - 3, batticon["height"] * total)
-    if total > batticon["danger"] then
+    if status["charge"] > batticon["danger"] then
       cr:set_source_rgb(color.parse_color(beautiful.batt_ok))
-    elseif total > batticon["dying"] and total <= batticon["danger"] then
+    elseif status["charge"] > batticon["dying"] and total <= batticon["danger"] then
       cr:set_source_rgb(color.parse_color(beautiful.batt_danger))
-    elseif total <= batticon["danger"] then
+    elseif status["charge"] <= batticon["danger"] then
       cr:set_source_rgb(color.parse_color(beautiful.batt_dying))
     end
     cr:fill()

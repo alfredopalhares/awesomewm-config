@@ -13,4 +13,6 @@ nested X session, so it can be tested within another WM
 
 [Tyranical dinamic tagging ](https://github.com/Elv13/awesome-tyranical)
 
+[lua-penlight](https://github.com/stevedonovan/Penlight)
+
 [Xephyr](http://www.freedesktop.org/wiki/Software/Xephyr) for the debug script
