@@ -8,14 +8,15 @@ local pl = require("pl.import_into")()
 
 local __bat = {}
 local base_string = "/sys/class/power_supply/BAT0"
-local batticon = {}
-batticon["width"] = 10
-batticon["height"] = 14
-batticon["icon"] = surface(awful.util.getdir("config") .. "/icons/batticon.png")
-batticon["charging"] = surface(awful.util.getdir("config") .. "/icons/charging.png")
-batticon["status"] = ""
-batticon["danger"] = 0.35
-batticon["dying"] = 0.10
+local batticon = {
+  width = 10,
+  height = 14,
+  icon = surface(awful.util.getdir("config") .. "/icons/batticon.png"),
+  charging = surface(awful.util.getdir("config") .. "/icons/charging.png"),
+  status = "",
+  danger = 0.35,
+  dying = 0.10
+}
 -- The battery charge
 local total = .5
 
