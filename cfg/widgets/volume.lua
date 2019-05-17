@@ -1,24 +1,22 @@
 local awful = require("awful")
 local wibox = require("wibox")
 local naughty = require("naughty")
-local notify = require("lib.notify")
+local notify = require("notify")
+local gears = require("gears")
+local beautiful = require("beautiful")
 
 local volume = {}
 
 
-volume["high"] = awful.util.getdir("config") .. "/icons/volume-high.png"
-volume["medium"] = awful.util.getdir("config") .. "/icons/volume-medium.png"
-volume["low"] = awful.util.getdir("config") .. "/icons/volume-low.png"
-volume["muted"] = awful.util.getdir("config") .. "/icons/volume-muted.png"
-volume["off"] = awful.util.getdir("config") .. "/icons/volume-off.png"
+volume["high"] = beautiful.theme_path .. "/icons/volume-high.png"
+volume["medium"] = beautiful.theme_path .. "/icons/volume-medium.png"
+volume["low"] = beautiful.theme_path .. "/icons/volume-low.png"
+volume["muted"] = beautiful.theme_path .. "/icons/volume-muted.png"
+volume["off"] = beautiful.theme_path .. "/icons/volume-off.png"
 
-local function get_mute()
-  return string.find(awful.util.pread("amixer get \"Master\""), '%[on%]') == nil
-end
-
-local function get_icon()
-  local percentage = volume:get()
-  if get_mute() then
+local function get_icon(vol, is_muted)
+  local percentage = vol
+  if is_muted then
     icon = volume["muted"]
   elseif percentage == 0 then
     icon = volume["off"]
@@ -35,19 +33,24 @@ end
 local function notify_volume()
   -- Volume notification bar
   -- Passing it trough avoids pop spaming
-  vol_notification = notify:fancy(volume:get(), get_icon() , vol_notification)
+  volume:get(function(vol, is_muted) vol_notification = notify:fancy(vol, get_icon(vol, is_muted) , vol_notification) end)
 end
 
-function volume:get()
-  local volume = tonumber(string.match(awful.util.pread("amixer get Master"), "(%d+)%%"))
-  if volume == nil then
-    naughty.notify({
-      text = "Error: Could not get volume information",
-      title = "Volume"
-    })
-    return 0
-  end
-  return volume
+function volume:get(callback)
+    awful.spawn.easy_async("amixer get Master", 
+                           function(stdout, stderr, exitreason, exitcode)
+                              if exitcode == 0
+                              then
+                                local volume = tonumber(string.match(stdout, "(%d+)%%"))
+                                local is_muted = string.find(stdout, '%[on%]') == nil
+                                callback(volume, is_muted)
+                              else
+                                naughty.notify({
+                                  text = "Error: Could not get volume information",
+                                  title = "Volume"
+                                })
+                              end
+                           end)
 end
 
 function volume:set(increment)
@@ -58,18 +61,14 @@ function volume:set(increment)
     amixer_param = math.abs(increment) .. "%+"
   end
 
-  awful.util.pread("amixer set Master " .. amixer_param)
+  awful.spawn.spawn("amixer set Master " .. amixer_param)
   notify_volume()
 
   return nil
 end
 
 function volume:mute()
-  if get_mute() then
-    awful.util.pread("amixer set Master unmute")
-  else
-    awful.util.pread("amixer set Master mute")
-  end
+  awful.spawn.spawn("amixer -D pulse set Master 1+ toggle")
   notify_volume()
 end
 
@@ -82,18 +81,23 @@ local function new(args)
   volume.widget = wibox.layout.fixed.horizontal()
 
   local textbox = wibox.widget.textbox()
-  textbox:set_text(volume.get())
-  volume.widget:add(textbox)
-
   local imagebox = wibox.widget.imagebox()
-  imagebox:set_image(get_icon())
+  
+  volume.widget:add(textbox)
   volume.widget:add(imagebox)
 
-  local volume_timer = timer ({timeout = 10})
+  volume:get(function(vol, is_muted)
+                textbox:set_text(vol)
+                imagebox:set_image(get_icon(vol, is_muted))
+            end)
+
+  local volume_timer = gears.timer ({timeout = 10})
   volume_timer:connect_signal("timeout",
     function()
-      textbox:set_text(volume:get())
-      imagebox:set_image(get_icon())
+        volume:get(function(vol, is_muted)
+                    textbox:set_text(vol)
+                    imagebox:set_image(get_icon(vol, is_muted))
+                end)
     end
   )
   volume_timer:start()

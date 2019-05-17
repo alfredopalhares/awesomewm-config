@@ -3,7 +3,6 @@ local battery = require("cfg.widgets.battery")
 local brightness = require("cfg.widgets.brightness")
 local volume = require("cfg.widgets.volume")
 local wibox = require("wibox")
---require("misc.notifications")
 -- freedesktop menu
 --require("cfg.menu")
 
@@ -11,7 +10,7 @@ local wibox = require("wibox")
 local mybattery = battery()
 local mybrightness = brightness().widget
 local mysystray= wibox.widget.systray()
-local mytextclock = awful.widget.textclock()
+local mytextclock = wibox.widget.textclock()
 local myvolume = volume().widget
 
 -- Create a wibox for each screen and add it
@@ -22,12 +21,12 @@ mytaglist = {}
 mytasklist = {}
 
 mytaglist.buttons = awful.util.table.join(
-  awful.button({ }, 1, awful.tag.viewonly),
+  awful.button({ }, 1, function(t) t:view_only() end),
   awful.button({ modkey }, 1, awful.client.movetotag),
   awful.button({ }, 3, awful.tag.viewtoggle),
   awful.button({ modkey }, 3, awful.client.toggletag),
-  awful.button({ }, 4, function(t) awful.tag.viewnext(awful.tag.getscreen(t)) end),
-  awful.button({ }, 5, function(t) awful.tag.viewprev(awful.tag.getscrren(t)) end)
+  awful.button({ }, 4, function(t) awful.tag.viewnext(t.screen) end),
+  awful.button({ }, 5, function(t) awful.tag.viewprev(t.screen) end)
 )
 mytasklist.buttons = awful.util.table.join(
   awful.button({ }, 1,
@@ -38,7 +37,7 @@ mytasklist.buttons = awful.util.table.join(
         -- Without this, the following :ivisible() makes no sense
         c.minimized = false
         if not c:isvisible() then
-          awful.tag.viewonly(c:tags()[1])
+          c:tags()[1]:view_only()
         end
         -- This will also un-minimize the client, if needed
         client.focus = c
@@ -94,7 +93,7 @@ for s = 1, screen.count() do
     mytasklist[s] = awful.widget.tasklist(s, awful.widget.tasklist.filter.currenttags, mytasklist.buttons)
 
     -- Create the wibox
-    mywibox[s] = awful.wibox({ position = "top", screen = s })
+    mywibox[s] = awful.wibar({ position = "top", screen = s })
 
     -- Widgets that go on the left side of the bar, such as the taglist and the the promptbox
     local left_layout = wibox.layout.fixed.horizontal()

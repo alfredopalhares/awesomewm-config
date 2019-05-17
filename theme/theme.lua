@@ -1,10 +1,11 @@
 local awful = require("awful")
+local beautiful = require("beautiful")
 
 ---------------------------
 -- Smoked awesome theme  --
 ---------------------------
 
-theme_base = awful.util.getdir("config") .. "/theme/"
+theme_base = beautiful.theme_path
 
 theme = {}
 

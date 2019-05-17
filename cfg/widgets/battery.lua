@@ -4,14 +4,15 @@ local naughty = require("naughty")
 local surface = require("gears.surface")
 local beautiful = require("beautiful")
 local color = require("gears.color")
+local gears = require("gears")
 
 local __bat = {}
 local base_string = "/sys/class/power_supply/BAT0"
 local batticon = {}
 batticon["width"] = 10
 batticon["height"] = 14
-batticon["icon"] = surface(awful.util.getdir("config") .. "/icons/batticon.png")
-batticon["charging"] = surface(awful.util.getdir("config") .. "/icons/charging.png")
+batticon["icon"] = surface(beautiful.theme_path .. "/icons/batticon.png")
+batticon["charging"] = surface(beautiful.theme_path .. "/icons/charging.png")
 batticon["status"] = ""
 batticon["danger"] = 0.35
 batticon["dying"] = 0.10
@@ -88,7 +89,7 @@ local function new(args)
 
 
 
-  local battery_timer = timer ({timeout = 10})
+  local battery_timer = gears.timer ({timeout = 10})
   battery_timer:connect_signal("timeout", function() update(textbox) end)
   battery_timer:start()
 
